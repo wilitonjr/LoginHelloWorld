@@ -1,4 +1,4 @@
-﻿using Microsoft.Owin.Hosting;
+using Microsoft.Owin.Hosting;
 using SQLSafeLoginPoc;
 using System;
 using System.Windows.Forms;
