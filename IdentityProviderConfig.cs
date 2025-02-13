@@ -22,6 +22,7 @@ namespace SQLSafe.Login.Poc
 
         //Common
         private static readonly string REDIRECT_URI = "http://localhost:5000/callback";
+        private static readonly string REDIRECT_LOGOUT_URI = "http://localhost:5000/logout";
         private static readonly string RESPONSE_TYPE = "code";
 
         public static string GetAuthority(IdentityProvider provider)
