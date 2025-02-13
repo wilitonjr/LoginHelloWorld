@@ -33,7 +33,7 @@ namespace SQLSafe.Login.Poc
                 case IdentityProvider.EntraID:
                     return ENTRA_AUTHORITY;
                 default:
-                    throw new ArgumentOutOfRangeException(nameof(provider), provider, null);
+                    throw new ArgumentException("Provider not found");
             }
         }
 
@@ -46,7 +46,7 @@ namespace SQLSafe.Login.Poc
                 case IdentityProvider.EntraID:
                     return ENTRA_CLIENT_ID;
                 default:
-                    throw new ArgumentOutOfRangeException(nameof(provider), provider, null);
+                    throw new ArgumentException("Provider not found");
             }
         }
 
@@ -59,7 +59,7 @@ namespace SQLSafe.Login.Poc
                 case IdentityProvider.EntraID:
                     return ENTRA_CLIENT_SECRET;
                 default:
-                    throw new ArgumentOutOfRangeException(nameof(provider), provider, null);
+                    throw new ArgumentException("Provider not found");
             }
         }
 
@@ -89,7 +89,7 @@ namespace SQLSafe.Login.Poc
                 case IdentityProvider.EntraID:
                     return $"{GetAuthority(provider)}/token";
                 default:
-                    throw new ArgumentOutOfRangeException(nameof(provider), provider, null);
+                    throw new ArgumentException("Provider not found");
             }
         }
         
@@ -102,13 +102,18 @@ namespace SQLSafe.Login.Poc
                 case IdentityProvider.EntraID:
                     return "https://graph.microsoft.com/v1.0/me";
                 default:
-                    throw new ArgumentOutOfRangeException(nameof(provider), provider, null);
+                    throw new ArgumentException("Provider not found");
             }
         }
 
-        public static string GetRedirectUri(IdentityProvider provider)
+        public static string RedirectUrl(IdentityProvider provider)
         {
             return REDIRECT_URI;
+        }
+
+        public static string RedirectLogoutUrl()
+        {
+            return REDIRECT_LOGOUT_URI;
         }
     }
 }

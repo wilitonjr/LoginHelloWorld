@@ -73,7 +73,7 @@ namespace SQLSafeLoginPoc
         {
             using (var client = new HttpClient())
             {
-                client.GetAsync("http://localhost:5000/logout").Wait();
+                client.GetAsync(IdentityProviderConfig.RedirectLogoutUrl()).Wait();
             }
 
             var logoutUrl = IdentityProviderConfig.GetLogoutUrl(currentProvider);
@@ -140,7 +140,7 @@ namespace SQLSafeLoginPoc
                         { "code", authCode },
                         { "client_id", IdentityProviderConfig.GetClientId(currentProvider) },
                         { "client_secret", IdentityProviderConfig.GetClientSecret(currentProvider) },
-                        { "redirect_uri", IdentityProviderConfig.GetRedirectUri(currentProvider) }
+                        { "redirect_uri", IdentityProviderConfig.RedirectUrl(currentProvider) }
                     })
                 };
 
