@@ -92,3 +92,7 @@ C:\$\SQLSafe.Login.Poc\bin\Debug\System.Security.Principal.Windows.xml
 C:\$\SQLSafe.Login.Poc\bin\Debug\System.Text.Encodings.Web.xml
 C:\$\SQLSafe.Login.Poc\bin\Debug\System.Threading.Tasks.Extensions.xml
 C:\$\SQLSafe.Login.Poc\bin\Debug\System.ValueTuple.xml
+C:\$\SQLSafe.Login.Poc\bin\Debug\Microsoft.Owin.Hosting.dll
+C:\$\SQLSafe.Login.Poc\bin\Debug\Microsoft.Owin.Hosting.xml
+C:\$\SQLSafe.Login.Poc\bin\Debug\Microsoft.Owin.Host.HttpListener.dll
+C:\$\SQLSafe.Login.Poc\bin\Debug\Microsoft.Owin.Host.HttpListener.xml
