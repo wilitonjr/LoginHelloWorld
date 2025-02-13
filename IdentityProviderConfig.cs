@@ -92,6 +92,7 @@ namespace SQLSafe.Login.Poc
                     throw new ArgumentOutOfRangeException(nameof(provider), provider, null);
             }
         }
+        
         public static string GetUserInfoUrl(IdentityProvider provider)
         {
             switch (provider)
