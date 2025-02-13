@@ -37,22 +37,21 @@ namespace SQLSafeLoginPoc
                     clientSecret = "";
                     break;
                 case 1: // Entra ID (Azure AD)
-                    authority = "https://login.microsoftonline.com/YOUR_TENANT_ID/v2.0";
+                    authority = "https://login.microsoftonline.com/d053cd9b-57ed-4738-9208-6a2e6600380f/oauth2/v2.0";
                     clientId = "";
                     clientSecret = "";
                     break;
             }
         }
 
-
         private async void btnLogin_Click(object sender, EventArgs e)
         {
             var authUrl = $"{authority}/authorize?" +
-                $"client_id={clientId}" +
-                $"&response_type={responseType}" +
-                $"&scope=openid profile email" +
-                $"&redirect_uri={redirectUri}" +
-                $"&state=random_state_value";
+                          $"client_id={clientId}" +
+                          $"&response_type=code" +
+                          $"&scope=openid profile email" +
+                          $"&redirect_uri={Uri.EscapeDataString(redirectUri)}" +
+                          $"&state=random_state_value";
 
             Process.Start(new ProcessStartInfo(authUrl) { UseShellExecute = true });
 
@@ -63,17 +62,29 @@ namespace SQLSafeLoginPoc
                 var accessToken = await GetAccessToken(authCode);
                 var userProfile = await GetUserProfile(accessToken);
 
-                string nick = userProfile.nickname;
-                var nickname = char.ToUpper(nick[0]) + nick.Substring(1);
-                var fullName = $"{userProfile.name}";
-                var email = userProfile.email;
+                if (cmbIdentityProvider.SelectedIndex == 0) // Okta (Auth0)
+                {
+                    string nick = userProfile.nickname;
+                    var nickname = char.ToUpper(nick[0]) + nick.Substring(1);
+                    var fullName = $"{userProfile.name}";
+                    var email = userProfile.email;
 
-                lblNickname.Text = $"Welcome, {nickname}";
-                lblName.Text = $"{fullName} ({email})";
+                    lblNickname.Text = $"Welcome, {nickname}";
+                    lblName.Text = $"{fullName} ({email})";
+                }
+                else // Entra ID (Azure AD)
+                {
+                    var fullName = $"{userProfile.displayName}";
+                    var email = userProfile.mail ?? userProfile.userPrincipalName;
+
+                    lblNickname.Text = $"Welcome, {fullName.Split(' ')[0]}";
+                    lblName.Text = $"{fullName} ({email})";
+                }
 
                 UpdateLoginStatus(true);
             }
         }
+
 
         private void btnLogout_Click(object sender, EventArgs e)
         {
@@ -138,7 +149,11 @@ namespace SQLSafeLoginPoc
         {
             using (var client = new HttpClient())
             {
-                var tokenRequest = new HttpRequestMessage(HttpMethod.Post, $"{authority}/oauth/token")
+                var tokenEndpoint = cmbIdentityProvider.SelectedIndex == 0
+                    ? $"{authority}/oauth/token" // Okta
+                    : $"{authority}/token"; // Entra ID
+
+                var tokenRequest = new HttpRequestMessage(HttpMethod.Post, tokenEndpoint)
                 {
                     Content = new FormUrlEncodedContent(new Dictionary<string, string>
                     {
@@ -164,7 +179,12 @@ namespace SQLSafeLoginPoc
             using (var client = new HttpClient())
             {
                 client.DefaultRequestHeaders.Add("Authorization", $"Bearer {accessToken}");
-                var response = await client.GetAsync($"{authority}/userinfo");
+
+                string userInfoEndpoint = cmbIdentityProvider.SelectedIndex == 0
+                    ? $"{authority}/userinfo" // Okta
+                    : "https://graph.microsoft.com/v1.0/me"; // Entra ID (Azure AD)
+
+                var response = await client.GetAsync(userInfoEndpoint);
                 response.EnsureSuccessStatusCode();
                 var responseString = await response.Content.ReadAsStringAsync();
 
@@ -193,7 +213,7 @@ namespace SQLSafeLoginPoc
                 btnLogin.Enabled = true;
             }
         }
-
+        
         private void InitializeIdentityProviders()
         {
             cmbIdentityProvider.Items.Add("Okta (auth0)");
