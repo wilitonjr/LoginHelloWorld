@@ -194,7 +194,7 @@ namespace SQLSafeLoginPoc
         {
             cmbIdentityProvider.Items.Add("Okta (auth0)");
             cmbIdentityProvider.Items.Add("Entra ID (Azure AD)");
-            cmbIdentityProvider.SelectedIndex = 0;
+            cmbIdentityProvider.SelectedIndex = (int)IdentityProvider.Okta;
         }
     }
 }

@@ -78,7 +78,6 @@ namespace SQLSafe.Login.Poc
             return $"{GetAuthority(provider)}/v2/logout?" +
                 $"client_id={Uri.EscapeDataString(GetClientId(provider))}" +
                 $"&returnTo={Uri.EscapeDataString("http://localhost:5000/logout-callback")}";
-
         }
 
         public static string GetTokenUrl(IdentityProvider provider)
