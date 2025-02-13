@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using SQLSafe.Login.Poc;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -11,12 +12,7 @@ namespace SQLSafeLoginPoc
 {
     public partial class MainForm : Form
     {
-        private string authority = "https://dev-0qje6s4wwpdjf1px.us.auth0.com";
-        private string clientId = "";
-        private string redirectUri = "http://localhost:5000/callback";
-        private string responseType = "code";
-        private string clientSecret = "";
-        private string clientSecretEntra = "";
+        private IdentityProvider currentProvider = IdentityProvider.Okta;
 
         public MainForm()
         {
@@ -29,29 +25,12 @@ namespace SQLSafeLoginPoc
 
         private void cmbIdentityProvider_SelectedIndexChanged(object sender, EventArgs e)
         {
-            switch (cmbIdentityProvider.SelectedIndex)
-            {
-                case 0: // Okta (Auth0)
-                    authority = "https://dev-0qje6s4wwpdjf1px.us.auth0.com";
-                    clientId = "";
-                    clientSecret = "";
-                    break;
-                case 1: // Entra ID (Azure AD)
-                    authority = "https://login.microsoftonline.com/d053cd9b-57ed-4738-9208-6a2e6600380f/oauth2/v2.0";
-                    clientId = "";
-                    clientSecret = "";
-                    break;
-            }
+            currentProvider = (IdentityProvider)cmbIdentityProvider.SelectedIndex;
         }
 
         private async void btnLogin_Click(object sender, EventArgs e)
         {
-            var authUrl = $"{authority}/authorize?" +
-                          $"client_id={clientId}" +
-                          $"&response_type=code" +
-                          $"&scope=openid profile email" +
-                          $"&redirect_uri={Uri.EscapeDataString(redirectUri)}" +
-                          $"&state=random_state_value";
+            var authUrl = IdentityProviderConfig.GetAuthUrl(currentProvider);
 
             Process.Start(new ProcessStartInfo(authUrl) { UseShellExecute = true });
 
@@ -62,29 +41,33 @@ namespace SQLSafeLoginPoc
                 var accessToken = await GetAccessToken(authCode);
                 var userProfile = await GetUserProfile(accessToken);
 
-                if (cmbIdentityProvider.SelectedIndex == 0) // Okta (Auth0)
+                switch (cmbIdentityProvider.SelectedIndex)
                 {
-                    string nick = userProfile.nickname;
-                    var nickname = char.ToUpper(nick[0]) + nick.Substring(1);
-                    var fullName = $"{userProfile.name}";
-                    var email = userProfile.email;
+                    case 0: // Okta (Auth0)
+                        string nick = userProfile.nickname;
+                        var nickname = char.ToUpper(nick[0]) + nick.Substring(1);
+                        var fullName = $"{userProfile.name}";
+                        var email = userProfile.email;
 
-                    lblNickname.Text = $"Welcome, {nickname}";
-                    lblName.Text = $"{fullName} ({email})";
-                }
-                else // Entra ID (Azure AD)
-                {
-                    var fullName = $"{userProfile.displayName}";
-                    var email = userProfile.mail ?? userProfile.userPrincipalName;
+                        lblNickname.Text = $"Welcome, {nickname}";
+                        lblName.Text = $"{fullName} ({email})";
+                        break;
 
-                    lblNickname.Text = $"Welcome, {fullName.Split(' ')[0]}";
-                    lblName.Text = $"{fullName} ({email})";
+                    case 1: // Entra ID (Azure AD)
+                        var entraFullName = $"{userProfile.displayName}";
+                        var entraEmail = userProfile.mail ?? userProfile.userPrincipalName;
+
+                        lblNickname.Text = $"Welcome, {entraFullName.Split(' ')[0]}";
+                        lblName.Text = $"{entraFullName} ({entraEmail})";
+                        break;
+
+                    default:
+                        throw new ArgumentOutOfRangeException();
                 }
 
                 UpdateLoginStatus(true);
             }
         }
-
 
         private void btnLogout_Click(object sender, EventArgs e)
         {
@@ -93,11 +76,9 @@ namespace SQLSafeLoginPoc
                 client.GetAsync("http://localhost:5000/logout").Wait();
             }
 
-            var auth0LogoutUrl = $"{authority}/v2/logout?" +
-                                 $"client_id={clientId}" +
-                                 $"&returnTo={Uri.EscapeDataString("http://localhost:5000/logout-callback")}";
+            var logoutUrl = IdentityProviderConfig.GetLogoutUrl(currentProvider);
 
-            Process.Start(new ProcessStartInfo(auth0LogoutUrl) { UseShellExecute = true });
+            Process.Start(new ProcessStartInfo(logoutUrl) { UseShellExecute = true });
 
             UpdateLoginStatus(false);
         }
@@ -149,19 +130,17 @@ namespace SQLSafeLoginPoc
         {
             using (var client = new HttpClient())
             {
-                var tokenEndpoint = cmbIdentityProvider.SelectedIndex == 0
-                    ? $"{authority}/oauth/token" // Okta
-                    : $"{authority}/token"; // Entra ID
+                var tokenUrl = IdentityProviderConfig.GetTokenUrl(currentProvider);
 
-                var tokenRequest = new HttpRequestMessage(HttpMethod.Post, tokenEndpoint)
+                var tokenRequest = new HttpRequestMessage(HttpMethod.Post, tokenUrl)
                 {
                     Content = new FormUrlEncodedContent(new Dictionary<string, string>
                     {
                         { "grant_type", "authorization_code" },
-                        { "client_id", clientId },
-                        { "client_secret", clientSecret },
                         { "code", authCode },
-                        { "redirect_uri", redirectUri }
+                        { "client_id", IdentityProviderConfig.GetClientId(currentProvider) },
+                        { "client_secret", IdentityProviderConfig.GetClientSecret(currentProvider) },
+                        { "redirect_uri", IdentityProviderConfig.GetRedirectUri(currentProvider) }
                     })
                 };
 
@@ -180,11 +159,8 @@ namespace SQLSafeLoginPoc
             {
                 client.DefaultRequestHeaders.Add("Authorization", $"Bearer {accessToken}");
 
-                string userInfoEndpoint = cmbIdentityProvider.SelectedIndex == 0
-                    ? $"{authority}/userinfo" // Okta
-                    : "https://graph.microsoft.com/v1.0/me"; // Entra ID (Azure AD)
-
-                var response = await client.GetAsync(userInfoEndpoint);
+                var userInfoUrl = IdentityProviderConfig.GetUserInfoUrl(currentProvider);
+                var response = await client.GetAsync(userInfoUrl);
                 response.EnsureSuccessStatusCode();
                 var responseString = await response.Content.ReadAsStringAsync();
 
