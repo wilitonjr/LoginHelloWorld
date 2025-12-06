@@ -44,8 +44,8 @@ namespace SQLSafeLoginPoc
                 switch (cmbIdentityProvider.SelectedIndex)
                 {
                     case 0: // Okta (Auth0)
-                        string nick = userProfile.nickname;
-                        var nickname = char.ToUpper(nick[0]) + nick.Substring(1);
+                        string nick = userProfile.nickname ?? "";
+                        var nickname = !string.IsNullOrEmpty(nick) ? char.ToUpper(nick[0]) + nick.Substring(1) : "User";
                         var fullName = $"{userProfile.name}";
                         var email = userProfile.email;
 
@@ -62,8 +62,8 @@ namespace SQLSafeLoginPoc
                         break;
 
                     case 2: // Scripps
-                        string scrippsNick = userProfile.nickname;
-                        var scrippsNickname = char.ToUpper(scrippsNick[0]) + scrippsNick.Substring(1);
+                        string scrippsNick = userProfile.nickname ?? "";
+                        var scrippsNickname = !string.IsNullOrEmpty(scrippsNick) ? char.ToUpper(scrippsNick[0]) + scrippsNick.Substring(1) : "User";
                         var scrippsFullName = $"{userProfile.name}";
                         var scrippsEmail = userProfile.email;
 

@@ -88,9 +88,19 @@ namespace SQLSafe.Login.Poc
 
         public static string GetLogoutUrl(IdentityProvider provider)
         {
-            return $"{GetAuthority(provider)}/v2/logout?" +
-                $"client_id={Uri.EscapeDataString(GetClientId(provider))}" +
-                $"&returnTo={Uri.EscapeDataString("http://localhost:5000/logout-callback")}";
+            switch (provider)
+            {
+                case IdentityProvider.Okta:
+                case IdentityProvider.Scripps:
+                    return $"{GetAuthority(provider)}/v2/logout?" +
+                        $"client_id={Uri.EscapeDataString(GetClientId(provider))}" +
+                        $"&returnTo={Uri.EscapeDataString("http://localhost:5000/logout-callback")}";
+                case IdentityProvider.EntraID:
+                    return $"{GetAuthority(provider)}/logout?" +
+                        $"post_logout_redirect_uri={Uri.EscapeDataString("http://localhost:5000/logout-callback")}";
+                default:
+                    throw new ArgumentException("Provider not found");
+            }
         }
 
         public static string GetTokenUrl(IdentityProvider provider)
