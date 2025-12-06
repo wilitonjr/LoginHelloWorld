@@ -5,7 +5,8 @@ namespace SQLSafe.Login.Poc
     public enum IdentityProvider
     {
         Okta,
-        EntraID
+        EntraID,
+        Scripps
     }
 
     internal class IdentityProviderConfig
@@ -20,6 +21,11 @@ namespace SQLSafe.Login.Poc
         private static readonly string ENTRA_CLIENT_ID = "";
         private static readonly string ENTRA_CLIENT_SECRET = "";
 
+        //Scripps
+        private static readonly string SCRIPPS_AUTHORITY = "https://scripps.auth.example.com";
+        private static readonly string SCRIPPS_CLIENT_ID = "";
+        private static readonly string SCRIPPS_CLIENT_SECRET = "";
+
         //Common
         private static readonly string REDIRECT_URI = "http://localhost:5000/callback";
         private static readonly string REDIRECT_LOGOUT_URI = "http://localhost:5000/logout";
@@ -33,6 +39,8 @@ namespace SQLSafe.Login.Poc
                     return OKTA_AUTHORITY;
                 case IdentityProvider.EntraID:
                     return ENTRA_AUTHORITY;
+                case IdentityProvider.Scripps:
+                    return SCRIPPS_AUTHORITY;
                 default:
                     throw new ArgumentException("Provider not found");
             }
@@ -46,6 +54,8 @@ namespace SQLSafe.Login.Poc
                     return OKTA_CLIENT_ID;
                 case IdentityProvider.EntraID:
                     return ENTRA_CLIENT_ID;
+                case IdentityProvider.Scripps:
+                    return SCRIPPS_CLIENT_ID;
                 default:
                     throw new ArgumentException("Provider not found");
             }
@@ -59,6 +69,8 @@ namespace SQLSafe.Login.Poc
                     return OKTA_CLIENT_SECRET;
                 case IdentityProvider.EntraID:
                     return ENTRA_CLIENT_SECRET;
+                case IdentityProvider.Scripps:
+                    return SCRIPPS_CLIENT_SECRET;
                 default:
                     throw new ArgumentException("Provider not found");
             }
@@ -76,9 +88,19 @@ namespace SQLSafe.Login.Poc
 
         public static string GetLogoutUrl(IdentityProvider provider)
         {
-            return $"{GetAuthority(provider)}/v2/logout?" +
-                $"client_id={Uri.EscapeDataString(GetClientId(provider))}" +
-                $"&returnTo={Uri.EscapeDataString("http://localhost:5000/logout-callback")}";
+            switch (provider)
+            {
+                case IdentityProvider.Okta:
+                case IdentityProvider.Scripps:
+                    return $"{GetAuthority(provider)}/v2/logout?" +
+                        $"client_id={Uri.EscapeDataString(GetClientId(provider))}" +
+                        $"&returnTo={Uri.EscapeDataString("http://localhost:5000/logout-callback")}";
+                case IdentityProvider.EntraID:
+                    return $"{GetAuthority(provider)}/logout?" +
+                        $"post_logout_redirect_uri={Uri.EscapeDataString("http://localhost:5000/logout-callback")}";
+                default:
+                    throw new ArgumentException("Provider not found");
+            }
         }
 
         public static string GetTokenUrl(IdentityProvider provider)
@@ -89,6 +111,8 @@ namespace SQLSafe.Login.Poc
                     return $"{GetAuthority(provider)}/oauth/token";
                 case IdentityProvider.EntraID:
                     return $"{GetAuthority(provider)}/token";
+                case IdentityProvider.Scripps:
+                    return $"{GetAuthority(provider)}/oauth/token";
                 default:
                     throw new ArgumentException("Provider not found");
             }
@@ -102,6 +126,8 @@ namespace SQLSafe.Login.Poc
                     return $"{GetAuthority(provider)}/userinfo";
                 case IdentityProvider.EntraID:
                     return "https://graph.microsoft.com/v1.0/me";
+                case IdentityProvider.Scripps:
+                    return $"{GetAuthority(provider)}/userinfo";
                 default:
                     throw new ArgumentException("Provider not found");
             }

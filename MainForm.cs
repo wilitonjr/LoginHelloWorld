@@ -44,8 +44,8 @@ namespace SQLSafeLoginPoc
                 switch (cmbIdentityProvider.SelectedIndex)
                 {
                     case 0: // Okta (Auth0)
-                        string nick = userProfile.nickname;
-                        var nickname = char.ToUpper(nick[0]) + nick.Substring(1);
+                        string nick = userProfile.nickname ?? "";
+                        var nickname = !string.IsNullOrEmpty(nick) ? char.ToUpper(nick[0]) + nick.Substring(1) : "User";
                         var fullName = $"{userProfile.name}";
                         var email = userProfile.email;
 
@@ -59,6 +59,16 @@ namespace SQLSafeLoginPoc
 
                         lblNickname.Text = $"Welcome, {entraFullName.Split(' ')[0]}";
                         lblName.Text = $"{entraFullName} ({entraEmail})";
+                        break;
+
+                    case 2: // Scripps
+                        string scrippsNick = userProfile.nickname ?? "";
+                        var scrippsNickname = !string.IsNullOrEmpty(scrippsNick) ? char.ToUpper(scrippsNick[0]) + scrippsNick.Substring(1) : "User";
+                        var scrippsFullName = $"{userProfile.name}";
+                        var scrippsEmail = userProfile.email;
+
+                        lblNickname.Text = $"Welcome, {scrippsNickname}";
+                        lblName.Text = $"{scrippsFullName} ({scrippsEmail})";
                         break;
 
                     default:
@@ -194,6 +204,7 @@ namespace SQLSafeLoginPoc
         {
             cmbIdentityProvider.Items.Add("Okta (auth0)");
             cmbIdentityProvider.Items.Add("Entra ID (Azure AD)");
+            cmbIdentityProvider.Items.Add("Scripps");
             cmbIdentityProvider.SelectedIndex = (int)IdentityProvider.Okta;
         }
     }
