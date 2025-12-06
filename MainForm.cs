@@ -61,6 +61,16 @@ namespace SQLSafeLoginPoc
                         lblName.Text = $"{entraFullName} ({entraEmail})";
                         break;
 
+                    case 2: // Scripps
+                        string scrippsNick = userProfile.nickname;
+                        var scrippsNickname = char.ToUpper(scrippsNick[0]) + scrippsNick.Substring(1);
+                        var scrippsFullName = $"{userProfile.name}";
+                        var scrippsEmail = userProfile.email;
+
+                        lblNickname.Text = $"Welcome, {scrippsNickname}";
+                        lblName.Text = $"{scrippsFullName} ({scrippsEmail})";
+                        break;
+
                     default:
                         throw new ArgumentOutOfRangeException();
                 }
@@ -194,6 +204,7 @@ namespace SQLSafeLoginPoc
         {
             cmbIdentityProvider.Items.Add("Okta (auth0)");
             cmbIdentityProvider.Items.Add("Entra ID (Azure AD)");
+            cmbIdentityProvider.Items.Add("Scripps");
             cmbIdentityProvider.SelectedIndex = (int)IdentityProvider.Okta;
         }
     }
